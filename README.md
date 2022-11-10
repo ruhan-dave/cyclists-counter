@@ -24,6 +24,38 @@ GIT_LFS_SKIP_SMUDGE=1 git clone git@github.com:Clement-W/bycicle-counter.git
 
 ## Data Exploration
 
+The data exploration phase is split into 2 notebooks :
+1. [adapt_dataset.ipynb](adapt_dataset.ipynb) 
+
+The first notebook contains the steps to adapt the original dataset, and make it usable for our project. In fact, when we downloaded the dataset, we discovered that 1649 images out of 13700 were not labelled. They had an empty label `txt` file. Thus we decided to remove theses images, so the dataset was reduced to 12051 images. Thanks to the python library `pylabel`, we loaded the dataset as a dataframe in order to explore this new version of the dataset. This library was useful in particular to convert the label format from Yolov5 to VOC XML. So we removed the `.txt` label and keept the new `.xml` labels. After that, we used a script from the tensorflow object detection api to split our dataset into 3 sets : 
+* 90% for the train set (10740 images)
+* 10% for the test set (2295 images)
+* 10% of the 90% train set for the validation set (1194 images) **TODO PROBLEM HERE CORRECT THAT (clément)**
+
+
+All these manipulations necessited to manage folders and files with command lines, that's why this notebook can't be run anymore. Before executing this notebook, the main folder looked like this:
+
+* `images/` contains 13 700 images
+* `labels/` contains 13 700 .txt files (yolo bounding box format) with this format `id center_x center_y width height`
+
+
+Now, after running this notebook the main folder looks like this:
+
+* `adapt_dataset.ipynb` this jupyter notebook
+* `tensorflow-scripts/` contains the scripts from tensorflow
+    * `partition_dataset.py` python script to split a folder of images with labels into 2 subfolders train and test
+* `images/` contains the data
+    * `train/` contains 10740 images and labels of the train set 
+    * `test/` contains 2295 images and labels of the test set
+    * `validation/` contains 1194 images and labels of the validation set
+
+
+Now that the dataset is usable for the project, we can perform some data analysis on it.
+
+2. [data_analysis.ipynb](data_analysis.ipynb)
+
+Todo
+
 ## Data Preprocessing
 
 ## References
