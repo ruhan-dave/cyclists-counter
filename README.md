@@ -32,7 +32,6 @@ unzip images.zip
 rm images.zip
 ```
 
-
 Now you're all set!
 
 ## Data Exploration
