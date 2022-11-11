@@ -1,3 +1,4 @@
+<!-- #region -->
 # Bycicle Counter
 UC Davis ECS 171 FInal Project
 
@@ -24,11 +25,12 @@ cd bicycle-counter
 wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1u39ZCDroyUpguicPMUZ20eIeux2N7uql' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1u39ZCDroyUpguicPMUZ20eIeux2N7uql" -O images.zip && rm -rf /tmp/cookies.txt
 ```
 
-* Unzip and move the data :
+* Unzip and delete the zip file :
+```
 unzip images.zip
 rm images.zip
-
 ```
+
 
 Now you're all set!
 
@@ -41,7 +43,7 @@ The first notebook contains the steps to adapt the original dataset, and make it
 * 90% for the train set (9760 images)
 * 10% for the test set (1206 images)
 * 10% of the 90% train set for the validation set (1085 images)
-
+<!-- #endregion -->
 
 All these manipulations necessited to manage folders and files with command lines, that's why this notebook can't be run anymore. Before executing this notebook, the main folder looked like this:
 
