@@ -72,7 +72,21 @@ Todo
 
 ## Data Preprocessing
 
-todo (possible to do everything in the config file of training
+The Tensorflow 2 Object Detection API allows to do data preprocessing and data augmentation in the training pipeline configuration. As stated in their [docs](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/configuring_jobs.md#configuring-the-trainer), all this is done in the `train_config` part of the training configuration file. The training configuration file is explained in the section [Configure the training pipeline](#configure-the-training-pipeline) of this file. 
+
+So here, the important part of the configuration file is `train_config` which parametrize:
+* Model parameter initialization
+* Input Preprocessing
+* SGD parameters
+
+Here we will focus on the input preprocessing part. All this preprocessing is included in the `data_augmentation_options` tag of the `train_config`. This data_augmentation_options can take several values that are listed [here](https://github.com/tensorflow/models/blob/master/research/object_detection/protos/preprocessor.proto). And [This file](https://github.com/tensorflow/models/blob/master/research/object_detection/builders/preprocessor_builder_test.py) also explains how to write them into the config file. The most important preprocessing options that we'll use is `resize_image`.Our images are very big (2048x1024), so we'll downscale them to be compatible with the pre-trained network we'll use. Usually, the input size of these networks are 256x256. Thus, the `data_agumentation_options` tag will have to include 
+``` 
+resize_image {
+      new_height: 256
+      new_width: 256
+}
+```
+Then, we will also add options to perform some data augmentations.
 
 ## Configure the training job
 
@@ -101,6 +115,15 @@ The Tensolfow API use what we call tf record files to store the data. It is a si
 ### Configure the training pipeline
 
 [follow docs](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#configure-the-training-pipeline)
+
+The TensorFlow Object Detection API uses protobuf files to configure the training and evaluation process. The config file is split into 5 parts:
+* The `model` configuration. This defines what type of model will be trained (ie. meta-architecture, feature extractor). This will not be modified as we'll use a pre-trained network, we won't modify it's architecture.
+* The `train_config`, which decides what parameters should be used to train model parameters (ie. SGD parameters, input preprocessing and feature extractor initialization values). This part is very important as we can preprocess our data and do some data augmentation.
+* The `eval_config`, which determines what set of metrics will be reported for evaluation. 
+* The `train_input_config`, which defines what dataset the model should be trained on.
+* The `eval_input_config`, which defines what dataset the model will be evaluated on. That's why we created a validation set for our data.
+
+
 
 ## Train the model
 
