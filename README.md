@@ -81,7 +81,7 @@ So here, the important part of the configuration file is `train_config` which pa
 * Input Preprocessing
 * SGD parameters
 
-Here we will focus on the input preprocessing part. All this preprocessing is included in the `data_augmentation_options` tag of the `train_config`. This data_augmentation_options can take several values that are listed [here](https://github.com/tensorflow/models/blob/master/research/object_detection/protos/preprocessor.proto). And [This file](https://github.com/tensorflow/models/blob/master/research/object_detection/builders/preprocessor_builder_test.py) also explains how to write them into the config file. The most important preprocessing options that we'll use is `resize_image`.Our images are very big (2048x1024), so we'll downscale them to be compatible with the pre-trained network we'll use. Usually, the input size of these networks are 256x256. Thus, the `data_agumentation_options` tag will have to include 
+Here we will focus on the input preprocessing part. All this preprocessing is included in the `data_augmentation_options` tag of the `train_config`. This data_augmentation_options can take several values that are listed [here](https://github.com/tensorflow/models/blob/master/research/object_detection/protos/preprocessor.proto). And [This file](https://github.com/tensorflow/models/blob/master/research/object_detection/builders/preprocessor_builder_test.py) also explains how to write them into the config file. The most important preprocessing options that we'll use is `resize_image`.Our images are very big (2048x1024), so we'll downscale them to be compatible with the pre-trained network we'll use. For some pre-trained models, the first layer consists in an image-resizer layer. In that case, we don't need to preprocess the data to scale it the right size to fit the input size of the network. But if it's not the case, we'll have to dit ourselves. Let's say the input size is 256x256, then the `data_agumentation_options` tag will have to include 
 ``` 
 resize_image {
       new_height: 256
@@ -114,6 +114,8 @@ The Tensolfow API use what we call tf record files to store the data. It is a si
 
 [follow docs](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#download-pre-trained-model)
 
+The pre-trained object detection models of the tensorflow object detection API are listed [here](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2_detection_zoo.md). Many different architecture exists such as RCNN, Faster-RCNN, SSD, etc. But today, it is EfficientNet based models (EfficientDet) that provide the best overall performances, and can work well for low latency applications. For example, `EfficientDet D1 640x640` can perform inference in 54ms on a nvidia-tesla-v100GPU, and obtain a COCO mAP (mean average precision) of 38.4 (the metrics will be discussed in the section [Evaluate the model on Test data](#evaluate-the-model-on-test-data). We can try to use different pre-trained models and compare the performances, but this wil be done for a second version of this project.
+
 ### Configure the training pipeline
 
 [follow docs](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#configure-the-training-pipeline)
@@ -124,7 +126,6 @@ The TensorFlow Object Detection API uses protobuf files to configure the trainin
 * The `eval_config`, which determines what set of metrics will be reported for evaluation. 
 * The `train_input_config`, which defines what dataset the model should be trained on.
 * The `eval_input_config`, which defines what dataset the model will be evaluated on. That's why we created a validation set for our data.
-
 
 
 ## Train the model
