@@ -96,21 +96,43 @@ The Tensolfow API use what we call tf record files to store the data. It is a si
 
 ### Download Pre-Trained Model
 
-### Configure Pre-Trained Model
+[follow docs](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#download-pre-trained-model)
+
+### Configure the training pipeline
+
+[follow docs](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#configure-the-training-pipeline)
 
 ## Train the model
 
+[follow docs](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#training-the-model)
+
 ## Monitor the training job using Tensorboard
+
+[follow docs](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#monitor-training-job-progress-using-tensorboard)
 
 ## Evaluate the model on Test data
 
+[follow docs](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#evaluating-the-model-optional)
+
 ## Export the model
+
+[follow docs](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#monitor-training-job-progress-using-tensorboard)
 
 ## Counting algorithm
 
+TODO
+
 ## Setup of the Jetson Nano
 
+TODO
+
 ## Inference on Jetson Nano
+
+TODO
+
+## Results
+
+TODO
 
 ## References
 
