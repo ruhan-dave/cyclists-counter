@@ -1,3 +1,6 @@
 .ipynb_checkpoints/**
 images/**
 *.record
+training-workspace/pre-trained-models/**
+!training-workspace/pre-trained-models/README.md
+
