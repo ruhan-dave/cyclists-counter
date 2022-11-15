@@ -32,6 +32,8 @@ unzip images.zip
 rm images.zip
 ```
 
+* [Optional if you don't want to train a model] Install every dependences necessary to train an object detection neural net with tensorflow object detection API. To do so, you can follow the installation instructions from the [official tensorlow object detection API](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/install.html)
+
 Now you're all set!
 
 ## Data Exploration
@@ -51,7 +53,7 @@ All these manipulations necessited to manage folders and files with command line
 * `labels/` contains 13 674 .txt files (yolo bounding box format) with this format `id center_x center_y width height`
 
 
-Now, after running this notebook the main folder looks like this:
+After running this notebook the main folder looks like this:
 
 * `adapt_dataset.ipynb` this jupyter notebook
 * `tensorflow-scripts/` contains the scripts from tensorflow
@@ -72,12 +74,43 @@ Todo
 
 todo (possible to do everything in the config file of training
 
-## Training setup
+## Configure the training job
 
-follow tensorflow doc for installation of tensorflow-object detection api, cuda, etc.
-todo
+To follow this part, we assume you installed the required libraries to train an object detection neural net with the tensorflow 2 object detection API. If not, just follow the instructions [here](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/install.html).
 
+### The training workspace
 
+To train our object detection model, we followed the [documentation](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html) of the Tensorflow2 Object Detection API. Thus, we organized the training workspace `training-workspace` the same way as it is recommended:
+
+* annotations: This folder will be used to store all *.csv files and the respective TensorFlow *.record files, which contain the list of annotations for our dataset images.
+
+* exported-models: This folder will be used to store exported versions of our trained model(s).
+
+* models: This folder will contain a sub-folder for each of training job. Each subfolder will contain the training pipeline configuration file *.config, as well as all files generated during the training and evaluation of our model.
+
+* pre-trained-models: This folder will contain the downloaded pre-trained models, which shall be used as a starting checkpoint for our training jobs.
+
+### Generate .record files
+
+The Tensolfow API use what we call tf record files to store the data. It is a simple format that contains both the images and the labels. To generate these files, we followed the documentation. Everything is explained in the notebook generate_tfrecords.ipynb
+
+### Download Pre-Trained Model
+
+### Configure Pre-Trained Model
+
+## Train the model
+
+## Monitor the training job using Tensorboard
+
+## Evaluate the model on Test data
+
+## Export the model
+
+## Counting algorithm
+
+## Setup of the Jetson Nano
+
+## Inference on Jetson Nano
 
 ## References
 
