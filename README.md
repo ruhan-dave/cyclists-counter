@@ -66,9 +66,18 @@ Now that the dataset is usable for the project, we can perform some data analysi
 
 2. [data_analysis.ipynb](data_analysis.ipynb)
 
-Todo
+Todo 
 
 ## Data Preprocessing
+
+todo (possible to do everything in the config file of training
+
+## Training setup
+
+follow tensorflow doc for installation of tensorflow-object detection api, cuda, etc.
+todo
+
+
 
 ## References
 
