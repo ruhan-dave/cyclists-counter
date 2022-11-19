@@ -86,7 +86,7 @@ Here we will focus on the `Input Preprocessing` part of the config file. All thi
 
 ### Data Augmentation
 
-First, our images are very big (2048x1024). Thus, it is important to resize them in order to make it compatible with the input layer of the neural network we'll use. The model that we chose has an input layer of 640x640. And the first layer consists in an image-resize layer. So we don't need to deal with the size of our images.
+First, our images are very big (2048x1024). Thus, it is important to resize them in order to make it compatible with the input layer of the neural network we'll use. The model that we chose has an input layer of 640x640. And the first layer consists in an [image-resize layer](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Resizing). So we don't need to deal with the size of our images.
 
 Now, let's focus on data augmentation. Data augmentation englobe techniques used to increase the amount of data, by adding to the dataset slightly modified copies of already existing data. Data augmentation helps to reduce overfitting by helping the network to generalize over different examples. This is closely related to oversampling. Here, we used 3 different methods to augment our data:
 * **random_scale_crop_and_pad_to_square**: Randomly scale, crop, and then pad the images to fixed square dimensions. The method sample a random_scale factor from a uniform distribution between scale_min and scale_max, and then resizes the image such that its maximum dimension is (output_size * random_scale). Then a square output_size crop is extracted from the resized image. Lastly, the cropped region is padded to the desired square output_size (640x640 here) by filling the empty values with zeros.
@@ -99,7 +99,7 @@ Now, let's focus on data augmentation. Data augmentation englobe techniques used
   4. randomly adjusting hue.
   
 In the training configuration file, this will looks like this:
-```json
+```py
   data_augmentation_options {
     random_horizontal_flip {
       probability: 0.3
