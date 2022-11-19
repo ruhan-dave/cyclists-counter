@@ -145,7 +145,7 @@ The Tensolfow API use what we call tf record files to store the data. It is a si
 * `test.record`: the test set
 
 The .record files are associated to a `label_map` file which tells the classes that must be classified in the dataset. Here we only want to classify the cyclists, so the label map is very simple:
-```json
+```py
 item {
     id: 1
     name: 'cyclist'
