@@ -68,7 +68,7 @@ Now that the dataset is usable for the project, we can perform some data analysi
 2. [data_exploration.ipynb](data_exploration.ipynb)
 
 This notebook contains all the work done to explore the dataset. In this notebook, we:
-* Load the dataset as a pandas dataframe thanks to the pylabe library
+* Load the dataset as a pandas dataframe thanks to the pylabel library
 * Analyze the the number of images, of bounding boxes
 * Analyze the images 
 * Analyze the repartitions of the bounding boxes
