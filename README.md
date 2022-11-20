@@ -52,7 +52,7 @@ All these manipulations necessited to manage folders and files with command line
 * `labels/` contains 13 674 .txt files (yolo bounding box format) with this format `id center_x center_y width height`
 
 
-After running this notebook the main folder looks like this:
+After running this notebook the main folder looked like this:
 
 * `adapt_dataset.ipynb` this jupyter notebook
 * `tensorflow-scripts/` contains the scripts from tensorflow
@@ -65,9 +65,14 @@ After running this notebook the main folder looks like this:
 <!-- #region -->
 Now that the dataset is usable for the project, we can perform some data analysis on it.
 
-2. [data_analysis.ipynb](data_analysis.ipynb)
+2. [data_exploration.ipynb](data_exploration.ipynb)
 
-Todo 
+This notebook contains all the work done to explore the dataset. In this notebook, we:
+* Load the dataset as a pandas dataframe thanks to the pylabe library
+* Analyze the the number of images, of bounding boxes
+* Analyze the images 
+* Analyze the repartitions of the bounding boxes
+* Visualize some sample from train,test and validation set.
 
 ## Data Preprocessing
 
@@ -75,18 +80,18 @@ Todo
 
 For our project, the data preprocessing was mixed with the data exploration, because the dataset needed to be modified in order to be compatible with the task we want to perform. But now that the dataset has been prepared, and that we explored it a little bit more, we can take a look at the data preprocessing we will setup in order to use the data during training.
 
-The Tensorflow 2 Object Detection API allows to do data preprocessing and data augmentation in the training pipeline configuration. As stated in their [docs](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/configuring_jobs.md#configuring-the-trainer), all this is done in the `train_config` part of the training configuration file. The training configuration file is explained in the section [Configure the training pipeline](#configure-the-training-pipeline) of this file. 
+The Tensorflow 2 Object Detection API allows to do data preprocessing and data augmentation in the training pipeline configuration. As stated in their [docs](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/configuring_jobs.md#configuring-the-trainer), all the preprocessing of the input is done in the `train_config` part of the training configuration file. The training configuration file is explained in the section [Configure the training pipeline](#configure-the-training-pipeline) of this README.md. 
 
 So here, the important part of the configuration file is `train_config` which parametrize:
 * Model parameter initialization
 * Input Preprocessing
 * SGD parameters
 
-Here we will focus on the `Input Preprocessing` part of the config file. All this preprocessing is included in the `data_augmentation_options` tag of the `train_config`. This data_augmentation_options can take several values that are listed [here](https://github.com/tensorflow/models/blob/master/research/object_detection/protos/preprocessor.proto). And [This file](https://github.com/tensorflow/models/blob/master/research/object_detection/builders/preprocessor_builder_test.py) also explains how to write them into the config file. 
+Here we will focus on the `Input Preprocessing` part of the config file. All this preprocessing is included in the `data_augmentation_options` tag of the `train_config`. This data_augmentation_options can take several values that are listed [here](https://github.com/tensorflow/models/blob/master/research/object_detection/protos/preprocessor.proto). And [this file](https://github.com/tensorflow/models/blob/master/research/object_detection/builders/preprocessor_builder_test.py) also explains how to write them into the config file. 
 
 ### Data Augmentation
 
-First, our images are very big (2048x1024). Thus, it is important to resize them in order to make it compatible with the input layer of the neural network we'll use. The model that we chose has an input layer of 640x640. And the first layer consists in an [image-resize layer](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Resizing). So we don't need to deal with the size of our images.
+First, our images are very big (2048x1024). Thus, it is important to resize them in order to make it compatible with the input layer of the neural network we'll use. The model that we chose has an input layer of 640x640. And the first layer consists in an [image-resize layer](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Resizing). So we don't need to deal with the size of our images, as these images will be automatically resized to the desired input size when feeded to the network.
 
 Now, let's focus on data augmentation. Data augmentation englobe techniques used to increase the amount of data, by adding to the dataset slightly modified copies of already existing data. Data augmentation helps to reduce overfitting by helping the network to generalize over different examples. This is closely related to oversampling. Here, we used 3 different methods to augment our data:
 * **random_scale_crop_and_pad_to_square**: Randomly scale, crop, and then pad the images to fixed square dimensions. The method sample a random_scale factor from a uniform distribution between scale_min and scale_max, and then resizes the image such that its maximum dimension is (output_size * random_scale). Then a square output_size crop is extracted from the resized image. Lastly, the cropped region is padded to the desired square output_size (640x640 here) by filling the empty values with zeros.
@@ -97,6 +102,12 @@ Now, let's focus on data augmentation. Data augmentation englobe techniques used
   2. randomly adjusting contrast
   3. randomly adjusting saturation 
   4. randomly adjusting hue.
+  
+We choosed to use the random scale,crop and pad to square data augmentation option because during the data exploration phase, we noticed that most of the cyclists were in the center of the image. Thus, to give different examples to the model, this data augmentation option will create other images where the cyclists won't be in the center of the image.
+
+We choosed to use the horizontal_flip data augmentation option because this will create more examples to train the network. As the cyclists can come from the left,right or front of the camera, this data augmentation option will help the network to see diverse cases of cyclist positions.
+
+We choosed to use the random_distort_color data augmentation option because during the data exploration phase, we noticed that the luminosity of the images are low, with a low contrast and a low saturation. Thus, this data augmentation option will help the network to see other examples with a different brightness, contrast, saturation and hue.
   
 In the training configuration file, this will looks like this:
 ```py
@@ -137,7 +148,7 @@ To train our object detection model, we followed the [documentation](https://ten
 
 * pre-trained-models: This folder will contain the downloaded pre-trained models, which shall be used as a starting checkpoint for our training jobs.
 
-### Generate .record files
+### Generate .record files [(generate_tfrecords.ipynb)](generate_tfrecords.ipynb)
 
 The Tensolfow API use what we call tf record files to store the data. It is a simple format that contains both the images and the labels in one file. To generate these files, we followed the documentation. Everything is explained in the notebook generate_tfrecords.ipynb. In the end, this add 3 new files to the folder `training-workspace/annotations`:
 * `train.record`: the train set
@@ -153,13 +164,13 @@ item {
 ```
 This label map is stored in `training-workspace/annotations/label_map.pbtxt` along with the .record files.
 
-### Download Pre-Trained Model
+### Download Pre-Trained Model [(download_pretrained_network.ipynb)](download_pretrained_network.ipynb)
 
 The pre-trained object detection models of the tensorflow object detection API are listed [here](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2_detection_zoo.md). Many different architecture exists such as RCNN, Faster-RCNN, SSD, etc. But today, it is EfficientNet based models (EfficientDet) that provide the best overall performances, and can work well for low latency applications. For example, `EfficientDet D1 640x640` can perform inference in 54ms on a nvidia-tesla-v100GPU, and obtain a COCO mAP (mean average precision) of 38.4 (the metrics will be discussed in the sections [Comments on training](#comments-on-training) [Evaluate the model on Test data](#evaluate-the-model-on-test-data). We can try to use different pre-trained models and compare the performances, but this wil be done for a second version of this project.
 
 Thus, we decided to use `EfficientDet D1 640x640` as our pre-trained object detector. The last checkpoint of the training and the training configuration file is available in the directory `training-workspace/pre-trained-models/efficientdet_d1_coco17_tpu-32`.
 
-### Configure the training pipeline
+### Configure the training pipeline [(configure_training_pipeline.ipynb)](configure_training_pipeline.ipynb)
 
 
 The TensorFlow Object Detection API uses protobuf files to configure the training and evaluation process. The config file is split into 5 parts:
@@ -220,7 +231,7 @@ TODO
 
 ## Setup of the Jetson Nano
 
-TODO
+to complete
 
 ## Inference on Jetson Nano
 
