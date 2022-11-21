@@ -11,7 +11,9 @@ Group members:
 
 The goal of our project is to address the problem of adapting infrastructure to cyclist flows. On campus, for example, it is difficult to estimate the number of bicycle parking spaces needed for different areas and buildings. We therefore want to create an automatic detector and counter of cyclists using a Jetson Nano. Once our project is completed, it would be possible to capture data about the flow of cyclists at different locations, and to use this data to make predictions or estimates of cyclist flows. To complete this project, we plan to use transfer-learning on a pre-trained object detection model, which means re-train the classification layer of the deep convolutional neural network on a custom dataset in order to create our own cyclist detector. To do so, we plan to use the [Tensorflow 2 Object Detection API](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/index.html), and use one of their pre-trained model which will be a deep convolutional neural network. The dataset we will use is the [Cyclist Dataset for Object Recognition](https://www.kaggle.com/datasets/semiemptyglass/cyclist-dataset) published by [1] in 2016. It contains 13.7k labeled images of size 2048 x 1024, recorded from a moving vehicle in the urban traffic of Beijing. The labels contain the positions of the bounding boxes around the cyclists in this format: `id center_x center_y width height`. Then, we plan to implement our own algorithmic-based tracking system that would allow us to count the number of cyclists detected over a period of time.
 
-## Setup Requirements :
+## Setup Requirements 
+
+Follow the steps below, or run the notebook [setup_install.ipynb](setup_install.ipynb).
 
 * Clone the repository :
 ```
@@ -31,7 +33,7 @@ unzip images.zip
 rm images.zip
 ```
 
-* [Optional if you don't want to train a model] Install every dependences necessary to train an object detection neural net with tensorflow object detection API. To do so, you can follow the installation instructions from the [official tensorlow object detection API](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/install.html)
+* [Optional if you don't want to train a model] Install every dependences necessary to train an object detection neural net with tensorflow object detection API. To do so, you can follow the installation instructions from the [official tensorlow object detection API](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/install.html).
 
 Now you're all set!
 
@@ -40,7 +42,7 @@ Now you're all set!
 The data exploration phase is split into 2 notebooks :
 1. [adapt_dataset.ipynb](adapt_dataset.ipynb) 
 
-The first notebook contains the steps to adapt the original dataset, and make it usable for our project. In fact, when we downloaded the dataset, we discovered that 1623 images out of 13674 were not labelled. They had an empty label `txt` file. Thus we decided to remove theses images, so the dataset was reduced to 12051 images. Thanks to the python library `pylabel`, we loaded the dataset as a dataframe in order to explore this new version of the dataset. This library was useful in particular to convert the label format from Yolov5 to VOC XML. So we removed the `.txt` label and keept the new `.xml` labels. After that, we used a script from the tensorflow object detection api to split our dataset into 3 sets : 
+The first notebook contains the steps to adapt the original dataset, and make it usable for our project. In fact, when we downloaded the dataset, we discovered that 1623 images out of 13674 were not labelled. These images had an empty `.txt` file as a label. Thus we decided to remove theses images, so the dataset was reduced to 12051 images. Thanks to the python library `pylabel`, we loaded the dataset as a dataframe in order to explore this new version of the dataset. This library was useful in particular to convert the label format from Yolov5 to VOC XML. As the tensorflow object detection API works with the VOC XML format, this step was mandatory. So we removed the `.txt` label and keept the new `.xml` labels. After that, we used a script from the tensorflow object detection API to split our dataset into 3 sets : 
 * 90% for the train set (9760 images)
 * 10% for the test set (1206 images)
 * 10% of the 90% train set for the validation set (1085 images)
@@ -72,7 +74,7 @@ This notebook contains all the work done to explore the dataset. In this noteboo
 * Analyze the the number of images, of bounding boxes
 * Analyze the images 
 * Analyze the repartitions of the bounding boxes
-* Visualize some sample from train,test and validation set.
+* Visualize some samples from train,test and validation set.
 
 ## Data Preprocessing
 
@@ -87,9 +89,11 @@ So here, the important part of the configuration file is `train_config` which pa
 * Input Preprocessing
 * SGD parameters
 
-Here we will focus on the `Input Preprocessing` part of the config file. All this preprocessing is included in the `data_augmentation_options` tag of the `train_config`. This data_augmentation_options can take several values that are listed [here](https://github.com/tensorflow/models/blob/master/research/object_detection/protos/preprocessor.proto). And [this file](https://github.com/tensorflow/models/blob/master/research/object_detection/builders/preprocessor_builder_test.py) also explains how to write them into the config file. 
+Here we will focus on the Input Preprocessing part of the config file. All this preprocessing is included in the `data_augmentation_options` tag of the `train_config`. This data_augmentation_options can take several values that are listed [here](https://github.com/tensorflow/models/blob/master/research/object_detection/protos/preprocessor.proto). And [this file](https://github.com/tensorflow/models/blob/master/research/object_detection/builders/preprocessor_builder_test.py) also explains how to write them into the config file. 
 
 ### Data Augmentation
+
+The pipeline that specify the data augmentation options that will be applied to the images is created in [configure_training_pipeline.ipynb](configure_training_pipeline.ipynb).
 
 First, our images are very big (2048x1024). Thus, it is important to resize them in order to make it compatible with the input layer of the neural network we'll use. The model that we chose has an input layer of 640x640. And the first layer consists in an [image-resize layer](https://www.tensorflow.org/api_docs/python/tf/keras/layers/Resizing). So we don't need to deal with the size of our images, as these images will be automatically resized to the desired input size when feeded to the network.
 
