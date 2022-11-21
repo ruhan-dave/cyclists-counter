@@ -13,7 +13,7 @@ The goal of our project is to address the problem of adapting infrastructure to 
 
 ## Setup Requirements 
 
-Follow the steps below, or run the notebook [setup_install.ipynb](setup_install.ipynb).
+Follow the steps below, or clone the repository and run the notebook [setup_install.ipynb](setup_install.ipynb).
 
 * Clone the repository :
 ```
