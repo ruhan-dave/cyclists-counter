@@ -134,6 +134,14 @@ In the training configuration file, this will looks like this:
   }
 ```
 
+During the training phase, we can monitor many parameters with tensorboard (see [Train the model](#Train-the-model)). Tensorboard also offers the possibility to see some examples of input images after data augmentation. Here are 3 of them:
+
+|                                                      Example 1                                                      	|                                                      Example 2                                                      	|                                                      Example 3                                                      	|
+|:-------------------------------------------------------------------------------------------------------------------:	|:-------------------------------------------------------------------------------------------------------------------:	|:-------------------------------------------------------------------------------------------------------------------:	|
+| <img src="markdown-images/data-augmentation1.png" alt="img example after data augmentation" style="height: 200px"/> 	| <img src="markdown-images/data-augmentation2.png" alt="img example after data augmentation" style="height: 200px"/> 	| <img src="markdown-images/data-augmentation3.png" alt="img example after data augmentation" style="height: 200px"/> 	|
+
+These 3 examples shows examples where the color have been distorded. And the first example have been randomly cropped and padded to a square (we can guess that it was the left part of the image).
+
 Now that we have explored, preprocessed and set up a data augmentation pipeline for our data, we can move to the training job.
 
 ## Configure the training job
@@ -213,24 +221,186 @@ The changes that have been done to this configuration file are:
 * In `eval_input_reader`, we changed `label_map_path` to the correct path of the label map for evaluation.
 * In `eval_input_reader`, we changed `input_path` to the path of the validation set so `validation.record`.
 
-For more details about the training configuration file, check the notebook `configure_training_pipeline.ipynb`.
+For more details about the training configuration file, check the notebook `configure_training_pipeline.ipynb`. You can also access the [pipeline.config](training-workspace/models/efficientdet_d1_v1/pipeline.config) manually.
 <!-- #endregion -->
 
+<!-- #region -->
 ## Train the model
 
-[follow docs](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#training-the-model)
+### Launch training and periodic evaluation
 
-## Monitor the training job using Tensorboard
+To train the model, and include a periodic evaluation of the model with the validation set, you need to open 2 terminal:
+* Train the model with
+```sh
+python tensorflow-scripts/model_main_tf2.py --model_dir=training-workspace/models/efficientdet_d1_v1 --pipeline_config_path=training-workspace/models/efficientdet_d1_v1/pipeline.config
+```
+* Launch periodic evaluation with
+```sh
+python tensorflow-scripts/model_main_tf2.py --model_dir=training-workspace/models/efficientdet_d1_v1 --pipeline_config_path=training-workspace/models/efficientdet_d1_v1/pipeline.config --checkpoint_dir=training-workspace/models/efficientdet_d1_v1
+```
+The model was trained for 2 days on a GPU XXXXX. If you want to access the model directory which contains all the training checkpoints, the evaluation reports (as .tfevents files), you can download the folder `efficientdet_d1_v1`, and replace the current folder `training-workspace/models/efficientdet_d1_v1` by the new one. To download it:
 
-[follow docs](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#monitor-training-job-progress-using-tensorboard)
+* Download the efficientdet_d1_v1 folder :
+```
+wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1ClnmwtBJbP6FIJNP2WWV8ZwfgWxiPFxX' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1ClnmwtBJbP6FIJNP2WWV8ZwfgWxiPFxX" -O efficientdet_d1_v1.zip && rm -rf /tmp/cookies.txt
+```
+It can also be download manually [here](https://drive.google.com/file/d/1ClnmwtBJbP6FIJNP2WWV8ZwfgWxiPFxX/view?usp=sharing).
 
-## Comments on training
+* Unzip and delete the zip file :
+```
+unzip efficientdet_d1_v1.zip
+rm efficientdet_d1_v1.zip
+```
 
-(show curves and images of tensorbard)
+You know have access to the result of the training phase.
+
+### Monitor the training job using Tensorboard
+
+To monitor how the training is going, a popular tool is [tensorboard](https://www.tensorflow.org/tensorboard). This tool is automatically installed with tensorflow. In case you just want tensorboard, you can still install it manually with `pip install tensorboard`. We will go over the details of the training in the next section [Analysis of the training phase](#analysis-of-the-training-phase). Here is what tensorboard looks like:
+
+<img src="markdown-images/tensorboard_overview.png" alt="model architecture" style="height: 400px"/>
+
+We uploaded our instance of tensorboard, so you can access it on [that link](https://tensorboard.dev/experiment/LMZdMvMxTwGcZ0ypzM7WGg/). Unfortunately, we can only publish the time series graphs, so you will not be able to see the image examples. But having that link open while reading this report, can help you to better understand the graphs, in particular by changing the smoothing cursor.
+
+If you have downloaded the whole efficientdet_d1_v1 directory, (see [Launch training and periodic evaluation](#Launch-training-and-periodic-evaluation)), then you can open tensorboard in our model directory with this command:
+```
+tensorboard --logdir=efficientdet_d1_v1
+```
+You should then be able to review all the information of the training, including the image examples from data augmentation, and the predictions in the validation set.
+
+## Analysis of the training phase
+
+### Learning rate decay
+
+The model was trained for 2 days. The training stopped automatically thanks to the cosine decay. When training models with millions of parameters (6.6 milions here), it is often recommended to lower the learning rate as the training progresses. Here, the cosine decay schedule is used. This schedule applies a cosine decay function to an optimizer step, given a provided initial learning rate (0.02 here). We started the training with a learning rate of 0.04, but after an hour of training, this has caused the gradients to explode. Thus, we decreased it to 0.02. Thanks to tensorboard, we can see how the learning rate has changed over the training with respect to the number of steps, or the time of training:
+
+|                                  By number of steps                                  	|                                       By time                                      	|
+|:------------------------------------------------------------------------------------:	|:----------------------------------------------------------------------------------:	|
+| <img src="markdown-images/lr-steps.png" alt="lr w.r.t steps" style="height: 200px"/> 	| <img src="markdown-images/lr-time.png" alt="lr w.r.t time" style="height: 200px"/> 	|
+
+We notice that at some point, the learning rate was equal to 0, which has stopped the training.
+
+### Monitoring the loss
+
+To fit the memory of the GPU that we used for the training, we had to set the batch size to 3. Even though it is a mini-batch gradient descent, the batch size remains very small, which is why it is very similar to a vanilla stochastic gradient descent. This causes the loss to vary a lot depending on the data contained in the batches. Thus, our loss curves consists of spikes which hardly show the tendency of these curves. To counter this, tensorboard offer the possibility to smooth the curves in order to make some curves more intelligible. The following curves that we will present are smoothed, but the actual curve is also displayed on the same graph with a low opacity.
+
+As we are training an object detector, there is 4 loss that we need to take into account:
+* The classification loss: Is the cyclists well classified as cyclists
+* The localization loss: Is the bounding boxes close to the cyclists
+* The regularization loss: Aims to keep the model parameters as small as possible
+* The total loss: Sum of the classification, localization, and regularization loss.
+
+Here are the 3 most relevant loss that we can analyze. The loss on the training set in orange, and the loss on the validation set is blue:
+
+|                                              Classification loss                                              	|                                             Localization loss                                             	|                                          Total loss                                         	|
+|:-------------------------------------------------------------------------------------------------------------:	|:---------------------------------------------------------------------------------------------------------:	|:-------------------------------------------------------------------------------------------:	|
+| <img src="markdown-images/classification-loss.png" alt="graph of classification loss" style="height: 200px"/> 	| <img src="markdown-images/localization-loss.png" alt="graph of localization loss" style="height: 200px"/> 	| <img src="markdown-images/total-loss.png" alt="graph of total loss" style="height: 200px"/> 	|
+<!-- #endregion -->
+
+As you can see in low opacity, it is not so easy to discern the tendency of the loss curves. First, we can notice that in the 3 graphs, our training loss and validation loss are very close, so we can suppose that our model is not overfitting the training data. More particularly:
+
+* The classification loss is decreasing in both training and validation set, so we can suppose that letting the training continue would have helped the network to better learn to classify the cyclists.
+* The localization loss is very close to 0, and is close to be on a plateau. We can suppose that letting the training continue would have led to network to overfit the localization of the bounding boxes.
+* The total loss was of course deacreasing as it is the sum of the two loss above.
+
+Based on the error at each step, we can say that the model is fitting well the data during from 50k steps, to the final step (300k). If we had more time to train the network, we could restart it on the last checkpoint, with a new base learning rate and see if the loss is still decreasing. This could maybe lead to better result, or cause overfitting.
+
+
+### Monitoring the performance
+
+During the training phase, an evaluation of the last checkpoint was performed every hour. During this evaluation, the evaluation loss was computed, but also the performance with the mAP (mean Average Precision) and mAR (mean Average Recall) metric. These two metrics are popular to measure the accuracy of object detection models. These metrics uses the concept of IoU (Intersection over Union). The IoU measure the overlap between 2 boundaries. We use the IoU to measure how much the predicted bounding box overlaps with the actual bounding box that must be predicted. Usually, we define the IoU threshold to 0.5, so if the IoU is equal or greater than 0.5, then we say that the prediction is a true positive, else it is a false positive. Thus, in the pipeline.config file, the IoU threshold is defined at 0.5.
+
+To compute the mAP, we first need to compute the precision and recall of detecting the bounding boxes correctly (thanks to the IoU) for each images. Then, we can plot a graph of precision vs recall. To compute the AP, we just need to compute the area under the precision-recall curve, using an interpolation technique. The COCO mAP impose to do a 101-point interpolation to calculate the precision at the recall level of the 101 equally spaced recall level, and then average them out. To have the mAP, we just need to take the mean over all the class, but as we only have one class here, the mAP is equivalent to the AP.
+
+Then we also use the AR (Average Recall), which consist of averaging the recall at IoU thresholds from 0.5 to 1, and thus summarize the distribution of recall across a range of IoU thresholds. So we can plot the recall values for each IoU threshold between 0.5 and 1. Then, the average recall describes the area doubled under the recall-IoU curve. Similarly to mAP, the mAR take the mean of the AR for every class. So the mAR is here equivalent to the AR.
+
+These metrics are really interesting because they evaluate the performance of the model to place the bounding boxes according to the classes. We can monitor these metrics in tensorboard and have an insight of the model's performance according to different cases. For the average precision we have:
+* The mAP at IoU varying from 0.5 to 0.95 (coco challenge metric) -> named mAP in tensorboard
+* The mAP at IoU = 0.5 (PASCAL VOC challenge metric) -> named mAP@.50IOU in tensorboard
+* The mAP at IoU = 0.75 (strict metric) -> named mAP@.75IOU in tensorboard
+* The mAP for small objects (area < $32^2$) -> named mAP(small) in tensorboard
+* The mAP for medium objects ($32^2$ < area < $96^2$) -> named mAP(medium) in tensorboard
+* The mAP for large objects (area > $96^2$) -> -> named mAP(large) in tensorboard
+
+For the average recall we have:
+* The AR given images with 1 detection maximum -> named AR@1 in tensorboard
+* The AR given images with 10 detection maximum -> named AR@10 in tensorboard
+* The AR given images with 100 detection maximum -> named AR@100 in tensorboard
+* The AR for small objects (area < $32^2$) -> named AR@100(small) in tensorboard
+* The AR for medium objects ($32^2$ < area < $96^2$) -> named AR@100(medium) in tensorboard
+* The AR for large objects (area > $96^2$) -> named AR@100(large) in tensorboard
+
+
+First, let's analyse the results of the average precision.
+
+
+<img src="markdown-images/mAP.png" alt="6 curves of the mAP" style="height: 400px"/>
+
+<!-- #region -->
+Overall, the mAP is increasing no matter which value of IoU is used, or the size of the objects. The first plot show the general mAP (averaging on different values of IoU between 0.5 and 0.95), which is increasing but was starting to get on a plateau after 250k steps. We notice that the value of the mAP\@0.50IOU is larger than the value of the mAP\@0.75IOU, which is expected as 0.75 is a much more strict threshold. The mAP\@.75IOU on the last evaluation is approximately equal to 0.65, which is still very good.
+
+To analyze the mAP according to different size of bounding boxes, we can refer to the data exploration notebook which contains the distribution of the width, and height of the bounding boxes. We need to be careful as the sizes of the predicted bounding boxes are in the 640x640 image, and not the 2048x1024 image. So we can convert the small(lesser than 32x32)/medium(between 32x32 and 96x96)/large(over 96x96) sizes so it is compatible with our data exploration image format:
+* Converting width=32 in our 2048x1024 image scale : $\dfrac{2024 \times 32}{640} = 101.2 $
+
+
+* Converting height=32 in our 2048x1024 image scale : $\dfrac{1024 \times 32}{640} = 51.2 $ 
+
+
+* Converting width=96 in our 2048x1024 image scale : $\dfrac{2024 \times 96}{640} = 303.6 $
+
+
+* Converting height=96 in our 2048x1024 image scale : $\dfrac{1024 \times 96}{640} = 153.6 $ 
+
+
+
+* **Small bouding boxes:** bounding boxes smaller than $101.2 \times 51.2$
+* **Medium bouding boxes:** bounding boxes between than $101.2 \times 51.2$ and $303.6 \times 153.6$
+* **Large bouding boxes:** bounding boxes greater than $303.6 \times 153.6$
+
+To know the proportion of small, medium and large bounding boxes in our dataset, we modified the [data exploration notebook](data_exploration.ipynb). Thus, we know that our dataset contains:
+* 40% of small bounding boxes
+* 40% of medium bounding boxes
+* 20% of large bounding boxes
+To better understand what small/medium/large means, we also displayed examples containing different size of bounding box. This really helps to understand and interpret the results.
+
+Knowing this, we can know better analyze the mAP according to the size of the bounding box. First we notice that the mAP for the small bounding box is close to 0. Knowing that 40% of bounding boxes are small, we can't say that it is because of the data. This is not a very good result, as it means that predictions of small bounding boxes is are not good. If we look at what small bounding boxes looks like in the data exploration notebook, we can understand how it is difficult to detect these bounding boxes. Thus, to use the model in order to count the cyclist, the camera needs to be closer than the examples showing small bounding boxes. Now if we look at the medium boundingboxes, the mAP on the last evaluation has reached 0.4 which is satisfying. If we look at what medium bounding boxes looks like in the data exploration notebook, we notice that some bounding boxes remains very close to the small ones. Then, if we look at the large bounding boxes, the mAP on the last evaluation has reached 0.8 which is very accurate. Thus, we can look at some examples containing large bounding boxes, and set up the camera at similar distances to count the cyclists effectively.
+
+These results concerns the mean average precision, so contains mostly information about the proportion of true positive, so the percentage of the predictions that are correct. Now let's look at the Average Recall, which contains information about how good the bounding boxes are retrieved.
+<!-- #endregion -->
+
+Now let's look at the average recall.
+
+
+<img src="markdown-images/AR.png" alt="6 curves of the AR" style="height: 400px"/>
+
+
+Again, the AR is increasing in every cases. The AR for images containing 1 bounding box reached 0.4 on the last evaluation. The AR for images containing at most 10 bounding boxes, the AR reached O.64 which means that overall the true positive are well retrieved. The results of AR@10 and AR for images containing at most 100 bounding boxes are approximatively equivalent. This can be explained because there is not many images that have more than 10 bounding boxes. In the data_exploration notebook, we also added the frequency of number of bounding boxes present in the images. Thus, we know that only 42 images have more than 10 bounding boxes in the whole dataset. As it is evaluated on the validation set (1085 images), we can suppose that the number of images having more than 10 bounding boxes is way lesser than 42. So AR@10 and AR@100 are approximatively equivalent. 
+
+
+Now if we focus on the AR depending on the size of the image, the results are very good. The AR for large images reached 0.84 on the last evaluation. The AR for medium images reached 0.55 on the last evaluation. The AR for small images reached 0.16 on the last evaluation. These also show that closer the cyclysts are to the camera, better the results. But it also show that in general, the bounding boxes are well retrieved by the model, which is positive.
+
+
+### Visualize some predictions during model evaluation
+
+When the model is evaluated, tensorboard will allow us to see 10 images with our model predictions. 
+
+|     Stage of training     	|                                  Prediction VS Ground truth                                  	|
+|:-------------------------:	|:--------------------------------------------------------------------------------------------:	|
+|      First evaluation     	| <img src="markdown-images/eval1.png" alt="img example of prediction" style="height: 200px"/> 	|
+| Second to last evaluation 	| <img src="markdown-images/eval4.png" alt="img example of prediction" style="height: 200px"/> 	|
+| Last evaluation           	| <img src="markdown-images/eval2.png" alt="img example of prediction" style="height: 200px"/> 	|
+| Last evaluation           	| <img src="markdown-images/eval3.png" alt="img example of prediction" style="height: 200px"/> 	|
+
+
+Vizualizing the predictions of the model during evaluation really show that our model has well generalized the representation of a cyclyst, and is able to recognize them with a very good accuracy. As we'll be counting the cyclist from a video (so a flux of images), we can be certain that most of the cyclists will be recognized.
+
+
 
 ## Evaluate the model on Test data
 
 [follow docs](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#evaluating-the-model-optional)
+
+## Comments on model evaluation
 
 ## Export the model
 
