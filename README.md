@@ -134,6 +134,8 @@ In the training configuration file, this will looks like this:
   }
 ```
 
+It is important to note that all the data augmentation options will be applied on the images, before entering the resize layer. 
+
 During the training phase, we can monitor many parameters with tensorboard (see [Train the model](#Train-the-model)). Tensorboard also offers the possibility to see some examples of input images after data augmentation. Here are 3 of them:
 
 |                                                      Example 1                                                      	|                                                      Example 2                                                      	|                                                      Example 3                                                      	|
@@ -319,15 +321,15 @@ These metrics are really interesting because they evaluate the performance of th
 * The mAP at IoU = 0.5 (PASCAL VOC challenge metric) -> named mAP@.50IOU in tensorboard
 * The mAP at IoU = 0.75 (strict metric) -> named mAP@.75IOU in tensorboard
 * The mAP for small objects (area < $32^2$) -> named mAP(small) in tensorboard
-* The mAP for medium objects ($32^2$ < area < $96^2$) -> named mAP(medium) in tensorboard
-* The mAP for large objects (area > $96^2$) -> -> named mAP(large) in tensorboard
+* The mAP for medium objects ( $32^2$ < area < $96^2$) -> named mAP(medium) in tensorboard
+* The mAP for large objects (area > $96^2$) -> named mAP(large) in tensorboard
 
 For the average recall we have:
 * The AR given images with 1 detection maximum -> named AR@1 in tensorboard
 * The AR given images with 10 detection maximum -> named AR@10 in tensorboard
 * The AR given images with 100 detection maximum -> named AR@100 in tensorboard
 * The AR for small objects (area < $32^2$) -> named AR@100(small) in tensorboard
-* The AR for medium objects ($32^2$ < area < $96^2$) -> named AR@100(medium) in tensorboard
+* The AR for medium objects ( $32^2$ < area < $96^2$) -> named AR@100(medium) in tensorboard
 * The AR for large objects (area > $96^2$) -> named AR@100(large) in tensorboard
 
 
