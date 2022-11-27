@@ -196,8 +196,9 @@ The changes that have been done to this configuration file are:
 * In `model`, we changed `num_classes` to 1 as we only want to predict the cyclists. This corresponds to changing the last dense layer of the neural network with only one neuron.
 
 
-* In `train_config`, we changed the `batch_size` to 32 in order to fit the memory of the machine used to train the network.
-* In `train_config`, we added some data augmentation options (see [Data Augmentation](#data-augmentation)).
+* In `train_config`, we changed the `batch_size` to 3 in order to fit the memory of the GPU used to train the network.
+* In `train_config`, we added some data augmentation options (see below).
+* In `train_config`, changed the base learning rate to 0.02 to avoid exploding gradients.
 * In `train_config`, we changed the path of `fine_tune_checkpoint` to the correct path, so the weights of the model are initialized at the last checkpoint.
 * In `train_config`, we changed `fine_tune_checkpoint_type` from classification to detection since we want to be training the full detection model and not only the classification part.
 
