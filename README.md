@@ -305,7 +305,7 @@ As you can see in low opacity, it is not so easy to discern the tendency of the 
 * The localization loss is very close to 0, and is close to be on a plateau. We can suppose that letting the training continue would have led to network to overfit the localization of the bounding boxes.
 * The total loss was of course deacreasing as it is the sum of the two loss above.
 
-Based on the error at each step, we can say that the model is fitting well the data during from 50k steps, to the final step (300k). If we had more time to train the network, we could restart it on the last checkpoint, with a new base learning rate and see if the loss is still decreasing. This could maybe lead to better result, or cause overfitting.
+Based on the error at each step, we can say that the model is fitting well the data during from 50k steps, to the final step (300k). We can interpret these plots as seeing the complexity of the model and the error. Here, we can say that even though the model become more complex across the time, it is still fitting well the data. If we had more time to train the network, we could restart it on the last checkpoint, with a new base learning rate and see if the loss is still decreasing. This could maybe lead to better result, or cause overfitting.
 
 
 ### Monitoring the performance
@@ -397,7 +397,7 @@ When the model is evaluated, tensorboard will allow us to see 10 images with our
 Vizualizing the predictions of the model during evaluation really show that our model has well generalized the representation of a cyclyst, and is able to recognize them with a very good accuracy. As we'll be counting the cyclist from a video (so a flux of images), we can be certain that most of the cyclists will be recognized.
 
 
-
+<!-- #region -->
 ## Evaluate the model on Test data
 
 [follow docs](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#evaluating-the-model-optional)
@@ -406,7 +406,27 @@ Vizualizing the predictions of the model during evaluation really show that our 
 
 ## Export the model
 
-[follow docs](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#monitor-training-job-progress-using-tensorboard)
+Now that the model is trained, we can export it as a .pb file. To do so, we can use the tensorflow script `exporter_main_v2.py` and execute:
+```
+python tensorflow-scripts/exporter_main_v2.py --input_type image_tensor --pipeline_config_path training-workspace/models/efficientdet_d1_v1/pipeline.config --trained_checkpoint_dir training-workspace/models/efficientdet_d1_v1 --output_directory training-workspace/exported-models/my_model
+```
+Now, we can use this model to perform inference.
+
+If you want to download the model, you can do it that way:
+
+* Download the m_model folder :
+```
+wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1BWaKL_VMOQ89Nuw5NEdRUv4Jl6GP6trC' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1BWaKL_VMOQ89Nuw5NEdRUv4Jl6GP6trC" -O my_model.zip && rm -rf /tmp/cookies.txt
+```
+It can also be download manually [here](https://drive.google.com/file/d/1BWaKL_VMOQ89Nuw5NEdRUv4Jl6GP6trC/view?usp=sharing).
+
+* Unzip, delete the zip file, and move the exported model at its proper place :
+```
+unzip my_model.zip
+rm my_model.zip
+mv my_model training-workspace/exported-models/
+```
+
 
 ## Counting algorithm
 
@@ -429,3 +449,4 @@ TODO
 [1] X. Li, F. Flohr, Y. Yang, H. Xiong, M. Braun, S. Pan, K. Li and D. M. Gavrila. A New Benchmark for Vision-Based Cyclist Detection. In Proc. of the IEEE Intelligent Vehicles Symposium (IV), Gothenburg, Sweden, pp.1028-1033, 2016.
 
 [2] Tan, Mingxing, and Quoc Le. "Efficientnet: Rethinking model scaling for convolutional neural networks." International conference on machine learning. PMLR, 2019.
+<!-- #endregion -->
