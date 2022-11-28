@@ -75,6 +75,7 @@ This notebook contains all the work done to explore the dataset. In this noteboo
 * Analyze the images 
 * Analyze the repartitions of the bounding boxes
 * Visualize some samples from train,test and validation set.
+* Analyze the repartitions of small/medium/large bouding boxes in the dataset
 
 ## Data Preprocessing
 
@@ -82,7 +83,7 @@ This notebook contains all the work done to explore the dataset. In this noteboo
 
 For our project, the data preprocessing was mixed with the data exploration, because the dataset needed to be modified in order to be compatible with the task we want to perform. But now that the dataset has been prepared, and that we explored it a little bit more, we can take a look at the data preprocessing we will setup in order to use the data during training.
 
-The Tensorflow 2 Object Detection API allows to do data preprocessing and data augmentation in the training pipeline configuration. As stated in their [docs](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/configuring_jobs.md#configuring-the-trainer), all the preprocessing of the input is done in the `train_config` part of the training configuration file. The training configuration file is explained in the section [Configure the training pipeline](#configure-the-training-pipeline) of this README.md. 
+The Tensorflow 2 Object Detection API allows to do data preprocessing and data augmentation in the training pipeline configuration. As stated in their [docs](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/configuring_jobs.md#configuring-the-trainer), all the preprocessing of the input is done in the `train_config` part of the training configuration file. The training configuration file is explained in the section [Configure the training pipeline](#Configure-the-training-pipeline-(configure_training_pipeline.ipynb)) of this README.md. 
 
 So here, the important part of the configuration file is `train_config` which parametrize:
 * Model parameter initialization
@@ -142,19 +143,19 @@ During the training phase, we can monitor many parameters with tensorboard (see 
 |:-------------------------------------------------------------------------------------------------------------------:	|:-------------------------------------------------------------------------------------------------------------------:	|:-------------------------------------------------------------------------------------------------------------------:	|
 | <img src="markdown-images/data-augmentation1.png" alt="img example after data augmentation" style="height: 200px"/> 	| <img src="markdown-images/data-augmentation2.png" alt="img example after data augmentation" style="height: 200px"/> 	| <img src="markdown-images/data-augmentation3.png" alt="img example after data augmentation" style="height: 200px"/> 	|
 
-These 3 examples shows examples where the color have been distorded. And the first example have been randomly cropped and padded to a square (we can guess that it was the left part of the image).
+These 3 examples shows images where the color have been distorded. And the first example have been randomly cropped and padded to a square (we can guess that it was the left part of the image).
 
 Now that we have explored, preprocessed and set up a data augmentation pipeline for our data, we can move to the training job.
 
 ## Configure the training job
 
-To follow this part, we assume you installed the required libraries to train an object detection neural net with the tensorflow 2 object detection API. If not, just follow the instructions [here](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/install.html).
+To follow this part, we assume you installed the required libraries to train an object detection neural net with the tensorflow 2 object detection API. If not, just follow the instructions [here](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/install.html). If you don't plan to train the model, you don't need to install these libraries.
 
 ### The training workspace
 
 To train our object detection model, we followed the [documentation](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html) of the Tensorflow2 Object Detection API. Thus, we organized the training workspace `training-workspace` the same way as it is recommended:
 
-* annotations: This folder will be used to store all *.csv files and the respective TensorFlow *.record files, which contain the list of annotations for our dataset images.
+* annotations: This folder will be used to store all the TensorFlow *.record files, which contain the list of annotations for our dataset images.
 
 * exported-models: This folder will be used to store exported versions of our trained model(s).
 
@@ -180,7 +181,7 @@ This label map is stored in `training-workspace/annotations/label_map.pbtxt` alo
 
 ### Download Pre-Trained Model [(download_pretrained_network.ipynb)](download_pretrained_network.ipynb)
 
-The pre-trained object detection models of the tensorflow object detection API are listed [here](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2_detection_zoo.md). Many different architecture exists such as RCNN, Faster-RCNN, SSD, etc. But today, it is EfficientNet based models (EfficientDet) that provide the best overall performances, and can work well for low latency applications. For example, `EfficientDet D1 640x640` can perform inference in 54ms on a nvidia-tesla-v100GPU, and obtain a COCO mAP (mean average precision) of 38.4 (the metrics will be discussed in the sections [Comments on training](#comments-on-training) [Evaluate the model on Test data](#evaluate-the-model-on-test-data). We can try to use different pre-trained models and compare the performances, but this wil be done for a second version of this project.
+The pre-trained object detection models of the tensorflow object detection API are listed [here](https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/tf2_detection_zoo.md). Many different architecture exists such as RCNN, Faster-RCNN, SSD, etc. Today, it is EfficientNet based models (EfficientDet) that provide the best overall performances, and can work well for low latency applications. For example, `EfficientDet D1 640x640` can perform inference in 54ms on a nvidia-tesla-v100GPU, and obtain a COCO mAP (mean average precision) of 38.4 (the metrics will be discussed in the section [Monitoring-the-performance](#Monitoring-the-performance). We can try to use different pre-trained models and compare the performances, but this wil be done for a second version of this project.
 
 The EfficientNet architecture has been proposed by [2] (EfficientNet: Rethinking Model Scaling for Convolutional Neural Network) in 2019. Here is the model architecture of the base EfficientNet model:
 
@@ -207,7 +208,7 @@ The changes that have been done to this configuration file are:
 
 
 * In `train_config`, we changed the `batch_size` to 3 in order to fit the memory of the GPU used to train the network.
-* In `train_config`, we added some data augmentation options (see below).
+* In `train_config`, we added some data augmentation options (see [Data-Augmentation](#Data-Augmentation)).
 * In `train_config`, changed the base learning rate to 0.02 to avoid exploding gradients.
 * In `train_config`, we changed the path of `fine_tune_checkpoint` to the correct path, so the weights of the model are initialized at the last checkpoint.
 * In `train_config`, we changed `fine_tune_checkpoint_type` from classification to detection since we want to be training the full detection model and not only the classification part.
@@ -232,15 +233,17 @@ For more details about the training configuration file, check the notebook `conf
 ### Launch training and periodic evaluation
 
 To train the model, and include a periodic evaluation of the model with the validation set, you need to open 2 terminal:
-* Train the model with
+* Train the model in the first terminal with
 ```sh
-python tensorflow-scripts/model_main_tf2.py --model_dir=training-workspace/models/efficientdet_d1_v1 --pipeline_config_path=training-workspace/models/efficientdet_d1_v1/pipeline.config
+cd training-workspace
+python ../tensorflow-scripts/model_main_tf2.py --model_dir=models/efficientdet_d1_v1 --pipeline_config_path=models/efficientdet_d1_v1/pipeline.config
 ```
-* Launch periodic evaluation with
+* Launch periodic evaluation in the other terminal with
 ```sh
-python tensorflow-scripts/model_main_tf2.py --model_dir=training-workspace/models/efficientdet_d1_v1 --pipeline_config_path=training-workspace/models/efficientdet_d1_v1/pipeline.config --checkpoint_dir=training-workspace/models/efficientdet_d1_v1
+cd training-workspace
+python ../tensorflow-scripts/model_main_tf2.py --model_dir=models/efficientdet_d1_v1 --pipeline_config_path=models/efficientdet_d1_v1/pipeline.config --checkpoint_dir=models/efficientdet_d1_v1
 ```
-The model was trained for 2 days on a GPU XXXXX. If you want to access the model directory which contains all the training checkpoints, the evaluation reports (as .tfevents files), you can download the folder `efficientdet_d1_v1`, and replace the current folder `training-workspace/models/efficientdet_d1_v1` by the new one. To download it:
+The model was trained for 2 days (50 hours) on a NVIDIA 3060TI. If you want to access the model directory which contains all the training checkpoints, the evaluation reports (as .tfevents files), you can download the folder `efficientdet_d1_v1`, and replace the current folder `training-workspace/models/efficientdet_d1_v1` by the new one. To download it:
 
 * Download the efficientdet_d1_v1 folder :
 ```
@@ -305,18 +308,18 @@ As you can see in low opacity, it is not so easy to discern the tendency of the 
 * The localization loss is very close to 0, and is close to be on a plateau. We can suppose that letting the training continue would have led to network to overfit the localization of the bounding boxes.
 * The total loss was of course deacreasing as it is the sum of the two loss above.
 
-Based on the error at each step, we can say that the model is fitting well the data during from 50k steps, to the final step (300k). We can interpret these plots as seeing the complexity of the model and the error. Here, we can say that even though the model become more complex across the time, it is still fitting well the data. If we had more time to train the network, we could restart it on the last checkpoint, with a new base learning rate and see if the loss is still decreasing. This could maybe lead to better result, or cause overfitting.
+Based on the error at each step, we can say that the model is fitting well the data from 50k steps, to the final step (300k). We can interpret these plots as seeing the complexity of the model and the error. Here, we can say that even though the model become more complex across the time, it is still fitting well the data. If we had more time to train the network, we could restart it on the last checkpoint, with a new base learning rate and see if the loss is still decreasing. This could maybe lead to better result, or cause overfitting. But this would probably mean to let the GPU run for 2 more days, which is costly in energy consumption.
 
 
 ### Monitoring the performance
 
-During the training phase, an evaluation of the last checkpoint was performed every hour. During this evaluation, the evaluation loss was computed, but also the performance with the mAP (mean Average Precision) and mAR (mean Average Recall) metric. These two metrics are popular to measure the accuracy of object detection models. These metrics uses the concept of IoU (Intersection over Union). The IoU measure the overlap between 2 boundaries. We use the IoU to measure how much the predicted bounding box overlaps with the actual bounding box that must be predicted. Usually, we define the IoU threshold to 0.5, so if the IoU is equal or greater than 0.5, then we say that the prediction is a true positive, else it is a false positive. Thus, in the pipeline.config file, the IoU threshold is defined at 0.5.
+During the training phase, an evaluation of the last checkpoint was performed every hour. During this evaluation, the evaluation loss was computed, but also the performance with the mAP (mean Average Precision) and mAR (mean Average Recall) metrics. These two metrics are popular to measure the accuracy of object detection models. These metrics uses the concept of IoU (Intersection over Union). The IoU measure the overlap between 2 boundaries. We use the IoU to measure how much the predicted bounding box overlaps with the actual bounding box that must be predicted. Usually, we define the IoU threshold to 0.5, so if the IoU is equal or greater than 0.5, then we say that the prediction is a true positive, else it is a false positive. Thus, in the pipeline.config file, the IoU threshold is defined at 0.5.
 
-To compute the mAP, we first need to compute the precision and recall of detecting the bounding boxes correctly (thanks to the IoU) for each images. Then, we can plot a graph of precision vs recall. To compute the AP, we just need to compute the area under the precision-recall curve, using an interpolation technique. The COCO mAP impose to do a 101-point interpolation to calculate the precision at the recall level of the 101 equally spaced recall level, and then average them out. To have the mAP, we just need to take the mean over all the class, but as we only have one class here, the mAP is equivalent to the AP.
+To compute the mAP, we first need to compute the precision and recall of detecting the bounding boxes correctly (thanks to the IoU) for each images. Then, we can plot a graph of precision vs recall. To compute the AP, we just need to compute the area under the precision-recall curve, using an interpolation technique. The COCO mAP impose to do a 101-point interpolation to calculate the precision at the 101 equally spaced recall level, and then average them out. To have the mAP, we just need to take the mean over all classes, but as we only have one class here, the mAP is equivalent to the AP.
 
 Then we also use the AR (Average Recall), which consist of averaging the recall at IoU thresholds from 0.5 to 1, and thus summarize the distribution of recall across a range of IoU thresholds. So we can plot the recall values for each IoU threshold between 0.5 and 1. Then, the average recall describes the area doubled under the recall-IoU curve. Similarly to mAP, the mAR take the mean of the AR for every class. So the mAR is here equivalent to the AR.
 
-These metrics are really interesting because they evaluate the performance of the model to place the bounding boxes according to the classes. We can monitor these metrics in tensorboard and have an insight of the model's performance according to different cases. For the average precision we have:
+These metrics are really interesting because they evaluate the performance of the model to place the bounding boxes according to the classes. We can monitor these metrics in tensorboard and have an insight of the model's performance according to different cases. For the average precision we measured:
 * The mAP at IoU varying from 0.5 to 0.95 (coco challenge metric) -> named mAP in tensorboard
 * The mAP at IoU = 0.5 (PASCAL VOC challenge metric) -> named mAP@.50IOU in tensorboard
 * The mAP at IoU = 0.75 (strict metric) -> named mAP@.75IOU in tensorboard
@@ -324,7 +327,7 @@ These metrics are really interesting because they evaluate the performance of th
 * The mAP for medium objects ( $32^2$ < area < $96^2$) -> named mAP(medium) in tensorboard
 * The mAP for large objects (area > $96^2$) -> named mAP(large) in tensorboard
 
-For the average recall we have:
+For the average recall we measured:
 * The AR given images with 1 detection maximum -> named AR@1 in tensorboard
 * The AR given images with 10 detection maximum -> named AR@10 in tensorboard
 * The AR given images with 100 detection maximum -> named AR@100 in tensorboard
@@ -353,7 +356,7 @@ To analyze the mAP according to different size of bounding boxes, we can refer t
 
 * Converting height=96 in our 2048x1024 image scale : $\dfrac{1024 \times 96}{640} = 153.6 $ 
 
-
+So we have:
 
 * **Small bouding boxes:** bounding boxes smaller than $101.2 \times 51.2$
 * **Medium bouding boxes:** bounding boxes between than $101.2 \times 51.2$ and $303.6 \times 153.6$
@@ -363,9 +366,10 @@ To know the proportion of small, medium and large bounding boxes in our dataset,
 * 40% of small bounding boxes
 * 40% of medium bounding boxes
 * 20% of large bounding boxes
+
 To better understand what small/medium/large means, we also displayed examples containing different size of bounding box. This really helps to understand and interpret the results.
 
-Knowing this, we can know better analyze the mAP according to the size of the bounding box. First we notice that the mAP for the small bounding box is close to 0. Knowing that 40% of bounding boxes are small, we can't say that it is because of the data. This is not a very good result, as it means that predictions of small bounding boxes is are not good. If we look at what small bounding boxes looks like in the data exploration notebook, we can understand how it is difficult to detect these bounding boxes. Thus, to use the model in order to count the cyclist, the camera needs to be closer than the examples showing small bounding boxes. Now if we look at the medium boundingboxes, the mAP on the last evaluation has reached 0.4 which is satisfying. If we look at what medium bounding boxes looks like in the data exploration notebook, we notice that some bounding boxes remains very close to the small ones. Then, if we look at the large bounding boxes, the mAP on the last evaluation has reached 0.8 which is very accurate. Thus, we can look at some examples containing large bounding boxes, and set up the camera at similar distances to count the cyclists effectively.
+Knowing this, we can know better analyze the mAP according to the size of the bounding box. First we notice that the mAP for the small bounding box is close to 0. Knowing that 40% of bounding boxes are small, we can't say that it is because of the data. If we look at what small bounding boxes looks like in the data exploration notebook, we can understand how it is difficult to detect these bounding boxes. Thus, to use the model in order to count the cyclists, the camera needs to be closer than the examples showing small bounding boxes. Now if we look at the medium bounding boxes, the mAP on the last evaluation has reached 0.4 which is satisfying. If we look at what medium bounding boxes looks like in the data exploration notebook, we notice that some bounding boxes remains very close to the small ones. Then, if we look at the large bounding boxes, the mAP on the last evaluation has reached 0.8 which is very accurate. Thus, we can look at some examples containing large bounding boxes, and set up the camera at similar distances to count the cyclists effectively.
 
 These results concerns the mean average precision, so contains mostly information about the proportion of true positive, so the percentage of the predictions that are correct. Now let's look at the Average Recall, which contains information about how good the bounding boxes are retrieved.
 <!-- #endregion -->
@@ -376,7 +380,7 @@ Now let's look at the average recall.
 <img src="markdown-images/AR.png" alt="6 curves of the AR" style="height: 400px"/>
 
 
-Again, the AR is increasing in every cases. The AR for images containing 1 bounding box reached 0.4 on the last evaluation. The AR for images containing at most 10 bounding boxes, the AR reached O.64 which means that overall the true positive are well retrieved. The results of AR@10 and AR for images containing at most 100 bounding boxes are approximatively equivalent. This can be explained because there is not many images that have more than 10 bounding boxes. In the data_exploration notebook, we also added the frequency of number of bounding boxes present in the images. Thus, we know that only 42 images have more than 10 bounding boxes in the whole dataset. As it is evaluated on the validation set (1085 images), we can suppose that the number of images having more than 10 bounding boxes is way lesser than 42. So AR@10 and AR@100 are approximatively equivalent. 
+Again, the AR is increasing in every cases. The AR for images containing 1 bounding box reached 0.4 on the last evaluation. The AR for images containing at most 10 bounding boxes, the AR reached 0.64 which means that overall the true positive are well retrieved. The results of AR@10 and AR for images containing at most 100 bounding boxes are approximatively equivalent. This can be explained because there is not many images that have more than 10 bounding boxes. In the data_exploration notebook, we also added the frequency of number of bounding boxes present in the images. Thus, we know that only 42 images have more than 10 bounding boxes in the whole dataset. As it is evaluated on the validation set (1085 images), we can suppose that the number of images having more than 10 bounding boxes is way lesser than 42. So AR@10 and AR@100 are approximatively equivalent. 
 
 
 Now if we focus on the AR depending on the size of the image, the results are very good. The AR for large images reached 0.84 on the last evaluation. The AR for medium images reached 0.55 on the last evaluation. The AR for small images reached 0.16 on the last evaluation. These also show that closer the cyclysts are to the camera, better the results. But it also show that in general, the bounding boxes are well retrieved by the model, which is positive.
@@ -414,7 +418,7 @@ Now, we can use this model to perform inference.
 
 If you want to download the model, you can do it that way:
 
-* Download the m_model folder :
+* Download the my_model folder :
 ```
 wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1BWaKL_VMOQ89Nuw5NEdRUv4Jl6GP6trC' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1BWaKL_VMOQ89Nuw5NEdRUv4Jl6GP6trC" -O my_model.zip && rm -rf /tmp/cookies.txt
 ```
