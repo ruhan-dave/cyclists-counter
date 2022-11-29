@@ -402,7 +402,7 @@ Vizualizing the predictions of the model during evaluation really show that our 
 
 
 <!-- #region -->
-## Evaluate the model on Test data
+## Evaluate the final model
 
 To test the model, we used a similar approach as what we did for training. First, we created a new folder `models/efficientdet_d1_v1_test` which contains the last checkpoint of the training, and a copy of the pipeline.config flie. Do to this last evaluation and be able to compare the final loss and performance metrics, we evaluated the model on the whole test, validation and training set. This would gave us 3 scalars for each performance metrics, and loss values. We could visualize these results with tensorboard as we did it before, but it is not very relevant here as we only have one data point per set. Thus, we decided to export those results to a pandas dataframe. The only way we found to do this, is to export the folder `models/efficientdet_d1_v1_test` to the tensorboard dev API, and then import the data as a pandas dataframe.  To do so, we first needed to create a new project in the tensorboard dev API:
 ```sh
@@ -428,8 +428,33 @@ Once it is done, we have the 3 evaluation folders `models/efficientdet_d1_v1_tes
 
 The results can be seen online on the [associated tensorboard](https://tensorboard.dev/experiment/dTD0vaI3SdyRZYI4WLHRbg/#scalars&runSelectionState=eyJldmFsIjpmYWxzZX0%3D) but this is not so relevant as it is just data point. To do the conversion into a pandas dataframe, we used the tensorboard library in python. This work can be found in the [evaluate_model.ipynb](evaluate_model.ipynb) notebook.
 
+If you want to download the folder `efficientdet_d1_v1_test` which contains the evaluations results as .tfevents files, you can do it by following these steps:
+
+* Download the `efficientdet_d1_v1_test` folder :
+```
+wget --load-cookies /tmp/cookies.txt "https://docs.google.com/uc?export=download&confirm=$(wget --quiet --save-cookies /tmp/cookies.txt --keep-session-cookies --no-check-certificate 'https://docs.google.com/uc?export=download&id=1Q_usxj2k0waHw4-6epKXPxcdn_GG3D1f' -O- | sed -rn 's/.*confirm=([0-9A-Za-z_]+).*/\1\n/p')&id=1Q_usxj2k0waHw4-6epKXPxcdn_GG3D1f" -O efficientdet_d1_v1_test.zip && rm -rf /tmp/cookies.txt
+```
+It can also be download manually [here](https://drive.google.com/file/d/1Q_usxj2k0waHw4-6epKXPxcdn_GG3D1f/view?usp=sharing).
+
+* Unzip, delete the zip file, and move the folder at its proper place :
+```
+unzip efficientdet_d1_v1_test.zip
+rm efficientdet_d1_v1_test.zip
+mv efficientdet_d1_v1_test training-workspace/models/
+```
 
 ## Comments on model evaluation
+
+The full results of model evaluation can be seen in the [evaluate_model.ipynb](evaluate_model.ipynb) notebook. Let's focus on the obtained losses:
+
+|           	| Classification loss 	| Localization loss 	| Total loss 	|
+|-----------	|:-------------------:	|:-----------------:	|------------	|
+| Test set  	| 0.223413            	| 0.003314          	| 0.264104   	|
+| Train set 	| 0.181020            	| 0.003023          	| 0.221419   	|
+| Test set  	| 0.197278            	| 0.003231          	| 0.237886   	|
+
+
+The validation and train loss are pretty close. The test loss is a bit higher (0.04 higher than the train loss). Even though this difference is very small, we could think that it is due to overfitting. According to the loss curves presented in [Monitoring-the-loss](#Monitoring-the-loss), the evaluation on validation set was very close to the training set during the whole training, which is not an indication of overfitting. So the fitting graph was not showing a sign of overfitting. In addition, the validation set have a loss close to the training set. As the validation set has never been used to update the weights during training (the gradients are not computed during evaluation), this shows that the model generalized well enough, without overfitting the training data. If we focus more on the resuts of the evaluation on test set, we notice that this difference of loss is mainly due to the classification loss which is 0.04 higher than the train set. Thus, this difference can be due to the data in the test set which can be slightly harder to classify, with harder examples.
 
 ## Export the model
 
