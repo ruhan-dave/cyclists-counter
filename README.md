@@ -342,7 +342,7 @@ First, let's analyse the results of the average precision.
 <img src="markdown-images/mAP.png" alt="6 curves of the mAP" style="height: 400px"/>
 
 <!-- #region -->
-Overall, the mAP is increasing no matter which value of IoU is used, or the size of the objects. The first plot show the general mAP (averaging on different values of IoU between 0.5 and 0.95), which is increasing but was starting to get on a plateau after 250k steps. We notice that the value of the mAP\@0.50IOU is larger than the value of the mAP\@0.75IOU, which is expected as 0.75 is a much more strict threshold. The mAP\@.75IOU on the last evaluation is approximately equal to 0.65, which is still very good.
+Overall, the mAP is increasing no matter which value of IoU is used, or the size of the objects. The first plot show the COCO mAP (averaging on different values of IoU between 0.5 and 0.95), which is increasing but was starting to get on a plateau after 250k steps. We notice that the value of the mAP\@0.50IOU is larger than the value of the mAP\@0.75IOU, which is expected as 0.75 is a much more strict threshold. The mAP\@.75IOU on the last evaluation is approximately equal to 0.65, which is still very good.
 
 To analyze the mAP according to different size of bounding boxes, we can refer to the data exploration notebook which contains the distribution of the width, and height of the bounding boxes. We need to be careful as the sizes of the predicted bounding boxes are in the 640x640 image, and not the 2048x1024 image. So we can convert the small(lesser than 32x32)/medium(between 32x32 and 96x96)/large(over 96x96) sizes so it is compatible with our data exploration image format:
 * Converting width=32 in our 2048x1024 image scale : $\dfrac{2024 \times 32}{640} = 101.2 $
@@ -445,7 +445,7 @@ mv efficientdet_d1_v1_test training-workspace/models/
 
 ## Comments on model evaluation
 
-The full results of model evaluation can be seen in the [evaluate_model.ipynb](evaluate_model.ipynb) notebook. Let's focus on the obtained losses:
+The full results of model evaluation can be seen in the [evaluate_model.ipynb](evaluate_model.ipynb) notebook. Here are the obtained losses:
 
 |           	| Classification loss 	| Localization loss 	| Total loss 	|
 |-----------	|:-------------------:	|:-----------------:	|------------	|
@@ -455,6 +455,21 @@ The full results of model evaluation can be seen in the [evaluate_model.ipynb](e
 
 
 The validation and train loss are pretty close. The test loss is a bit higher (0.04 higher than the train loss). Even though this difference is very small, we could think that it is due to overfitting. According to the loss curves presented in [Monitoring-the-loss](#Monitoring-the-loss), the evaluation on validation set was very close to the training set during the whole training, which is not an indication of overfitting. So the fitting graph was not showing a sign of overfitting. In addition, the validation set have a loss close to the training set. As the validation set has never been used to update the weights during training (the gradients are not computed during evaluation), this shows that the model generalized well enough, without overfitting the training data. If we focus more on the resuts of the evaluation on test set, we notice that this difference of loss is mainly due to the classification loss which is 0.04 higher than the train set. Thus, this difference can be due to the data in the test set which can be slightly harder to classify, with harder examples.
+
+Let's focus on 3 performance metrics now:
+
+|           	| mAP@.50IOU 	| map@.75IOU 	|  AR@100  	|
+|-----------	|:----------:	|------------	|:--------:	|
+| Test set  	| 0.823290   	| 0.649656   	| 0.658216 	|
+| Train set 	| 0.840275   	| 0.676805   	| 0.672312 	|
+| Test set  	| 0.826129   	| 0.655632   	| 0.662531 	|
+
+As discussed previously we have:
+- the mean Average Precision with an IoU threshold of 0.5
+- the mean Average Precision with an IoU threshold of 0.75 (more strict)
+- the Average Recall for all images (AR given 100 detections maximum, so include all images here)
+
+The results are very good, we have an mAP with an IoU threshold of 0.5 (standard for pascal vox challenge) greater than 80\% for every set. If we use a more strict threshold (0.75), we still have an mAP greater than 60\% for every set, with the test set at ~0.65 which is very good. If we look at the average recall, we also have results greater than 65\% for every set. Thus, we can affirm that our model generalized well the dataset, and is good at detecting cyclists.
 
 ## Export the model
 
