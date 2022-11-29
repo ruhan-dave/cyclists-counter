@@ -479,6 +479,13 @@ rm my_model.zip
 mv my_model training-workspace/exported-models/
 ```
 
+<!-- #endregion -->
+
+## Use our model with Hugging Face Spaces
+
+If you want to play with our cyclist detector model, you can use the hugging face spaces created for this model: [cyclists-detection](https://huggingface.co/spaces/clement-w/cyclists-detection). You can upload images by URL, or from your computer. This is what the HF Spaces looks like:
+<img src="markdown-images/huggingface.png" alt="hugging face spaces for cyclist detection" style="height: 400px"/>
+
 
 ## Counting algorithm
 
@@ -501,4 +508,3 @@ TODO
 [1] X. Li, F. Flohr, Y. Yang, H. Xiong, M. Braun, S. Pan, K. Li and D. M. Gavrila. A New Benchmark for Vision-Based Cyclist Detection. In Proc. of the IEEE Intelligent Vehicles Symposium (IV), Gothenburg, Sweden, pp.1028-1033, 2016.
 
 [2] Tan, Mingxing, and Quoc Le. "Efficientnet: Rethinking model scaling for convolutional neural networks." International conference on machine learning. PMLR, 2019.
-<!-- #endregion -->
