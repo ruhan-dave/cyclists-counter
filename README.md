@@ -404,7 +404,30 @@ Vizualizing the predictions of the model during evaluation really show that our 
 <!-- #region -->
 ## Evaluate the model on Test data
 
-[follow docs](https://tensorflow-object-detection-api-tutorial.readthedocs.io/en/latest/training.html#evaluating-the-model-optional)
+To test the model, we used a similar approach as what we did for training. First, we created a new folder `models/efficientdet_d1_v1_test` which contains the last checkpoint of the training, and a copy of the pipeline.config flie. Do to this last evaluation and be able to compare the final loss and performance metrics, we evaluated the model on the whole test, validation and training set. This would gave us 3 scalars for each performance metrics, and loss values. We could visualize these results with tensorboard as we did it before, but it is not very relevant here as we only have one data point per set. Thus, we decided to export those results to a pandas dataframe. The only way we found to do this, is to export the folder `models/efficientdet_d1_v1_test` to the tensorboard dev API, and then import the data as a pandas dataframe.  To do so, we first needed to create a new project in the tensorboard dev API:
+```sh
+tensorboard dev upload --logdir training-workspace/models/efficientdet_d1_v1_test
+```
+In a new terminal, we then ran the evaluations on each set. To run the evaluation with the test set, we did:
+
+- In the eval_input_reader part of the copy of pipeline.config, we changed input_path to `annotations/test.record`.
+- Then we launched the evaluation command (which is the same as the one we used during training):
+```sh
+cd training-workspace
+python ../tensorflow-scripts/model_main_tf2.py --model_dir=models/efficientdet_d1_v1_test --pipeline_config_path=models/efficientdet_d1_v1_test/pipeline.config --checkpoint_dir=models/efficientdet_d1_v1_test
+```
+- A folder named eval has been created in `models/efficientdet_d1_v1_test`, which contains the .tfevents file corresponding to the evaluation of the test set. Thus, we moved it in its corresponding folder:
+```sh
+cd models/efficientdet_d1_v1_test
+mkdir test
+mv eval/*.tfevents test
+```
+The, we repeted these steps for the training and validation set, just by replacing the input_path in the pipeline by `annotations/validation.record` or `annotations/train.record`, and in the last step, create the folders `validation` and `training` and move the .tfevents files accordingly to their respective folder.
+
+Once it is done, we have the 3 evaluation folders `models/efficientdet_d1_v1_test/training`,`models/efficientdet_d1_v1_test/test` and `models/efficientdet_d1_v1_test/validation`. We also have an empty `models/efficientdet_d1_v1_test/eval` folder that we deleted: `rmdir models/efficientdet_d1_v1_test/eval`.
+
+The results can be seen online on the [associated tensorboard](https://tensorboard.dev/experiment/dTD0vaI3SdyRZYI4WLHRbg/#scalars&runSelectionState=eyJldmFsIjpmYWxzZX0%3D) but this is not so relevant as it is just data point. To do the conversion into a pandas dataframe, we used the tensorboard library in python. This work can be found in the [evaluate_model.ipynb](evaluate_model.ipynb) notebook.
+
 
 ## Comments on model evaluation
 
