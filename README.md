@@ -573,17 +573,44 @@ TODO
 
 TODO
 
-
+<!-- #region -->
 # Collaboration
 
-#### Name : Title
+#### Clément Weinreich : Project Leader
 
 Contributions:
-* a
-* b
-* c
+* Project lead 
+* Adaptation of the dataset (code + write up)
+* Data exploration (code + write up)
+* Data preprocessing (code + write up)
+* Configuration of training job (code + write up)
+* Analysis of the training phase and results (write up)
+* Comments on model evaluation (write up)
+* Create demo with hugging face space (code + write up)
+* TODO ADD THINGS
+
+#### Timothy Blanton : Model trainer
+
+Contributions:
+* Trained the main model (code)
+* Trained the second model (code)
+* Evaluated the models (code)
+* Export of the main model (code)
+* TODO ADD THINGS
 
 
+#### Sohan Patil : Jetson Nanoer?
+
+Contributions:
+* Setup of the jetson nano
+* TODO ADD THINGS
+
+#### Dave Ru Han Wang : Coder? Counter?
+
+Contributions:
+* Data exploration (code)
+* TODO ADD THINGS
+<!-- #endregion -->
 
 # Extra-information
 
