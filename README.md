@@ -1,7 +1,7 @@
 <h1 style=text-align:center> Cyclists Counter - ECS171 Final Project </h1>
 
 
-Clément Weinreich - Timothy Blanton - Sohan Patil - Dave Ru Han Wang
+Clément Weinreich - Timothy Blanton - Sohan Patil - Ru Han Wang (Dave)
 
 
 # Introduction
